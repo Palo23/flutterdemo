@@ -47,8 +47,12 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget _bottomAction(IconData icon) {
     return InkWell(
       child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Icon(icon),
+        padding: const EdgeInsets.all(16.0),
+        child: Icon(
+          icon,
+          color: Colors.blue,
+          size: 24.0,
+        ),
       ),
       onTap: () {},
     );
@@ -80,7 +84,8 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
+        heroTag: 'add_button',
+        child: Container(child: Icon(Icons.add)),
         onPressed: () {
           Navigator.of(context).pushNamed('/add');
         },

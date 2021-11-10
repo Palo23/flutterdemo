@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:demo/category_selected_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -9,7 +10,7 @@ class AddPage extends StatefulWidget {
 
 class _AddPageState extends State<AddPage> {
   String category = '';
-  double value = 0;
+  int value = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +58,8 @@ class _AddPageState extends State<AddPage> {
           'Shopping': FontAwesomeIcons.shoppingCart,
           'Alcohol': FontAwesomeIcons.wineBottle,
           'Fast food': FontAwesomeIcons.hamburger,
-          'Bill': FontAwesomeIcons.wallet,
+          'Food': FontAwesomeIcons.utensils,
+          'Bills': FontAwesomeIcons.wallet,
         },
         onChangedValue: (newCategory) => category = newCategory,
       ),
@@ -65,9 +67,10 @@ class _AddPageState extends State<AddPage> {
   }
 
   Widget _currentValue() {
+    var realValue = value / 100.0;
     return Padding(
         padding: EdgeInsets.symmetric(vertical: 32.0),
-        child: Text('\$${value.toStringAsFixed(2)}',
+        child: Text('\$${realValue.toStringAsFixed(2)}',
             style: TextStyle(
                 fontSize: 50.0,
                 fontWeight: FontWeight.w500,
@@ -79,7 +82,12 @@ class _AddPageState extends State<AddPage> {
         behavior: HitTestBehavior.opaque,
         onTap: () {
           setState(() {
-            value = value * 10 + int.parse(text);
+            if (text == '.') {
+              /* value = value * 100; */
+              value = value;
+            } else {
+              value = value * 10 + int.parse(text);
+            }
           });
         },
         child: Container(
@@ -126,7 +134,7 @@ class _AddPageState extends State<AddPage> {
                   behavior: HitTestBehavior.opaque,
                   onTap: () {
                     setState(() {
-                      value = (value ~/ 10) + (value - value.toInt());
+                      value = value ~/ 10;
                     });
                   },
                   child: Container(
@@ -146,26 +154,43 @@ class _AddPageState extends State<AddPage> {
   }
 
   Widget _submit() {
-    return Container(
-      height: 50.0,
-      width: double.infinity,
-      decoration: BoxDecoration(color: Colors.purpleAccent),
-      child: MaterialButton(
-        child: Text(
-          'Add expenses',
-          style: TextStyle(color: Colors.white, fontSize: 20.0),
-        ),
-        onPressed: () {
-          if (value > 0 && category != '') {
-            Navigator.of(context).pop();
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text('Select value and category'),
-              duration: const Duration(seconds: 2),
-            ));
-          }
-        },
-      ),
-    );
+    return Hero(
+        tag: 'add_button',
+        child: Container(
+            child: Container(
+          height: 50.0,
+          width: double.infinity,
+          decoration: BoxDecoration(color: Colors.purpleAccent),
+          child: MaterialButton(
+            child: Text(
+              'Add expenses',
+              style: TextStyle(color: Colors.white, fontSize: 20.0),
+            ),
+            onPressed: () {
+              if (value > 0 && category != '') {
+                _create();
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text('Select value and category'),
+                  duration: const Duration(seconds: 2),
+                ));
+              }
+            },
+          ),
+        )));
+  }
+
+  void _create() {
+    FirebaseFirestore.instance.collection('expenses').doc().set({
+      'category': category,
+      'value': value,
+      'month': DateTime.now().month,
+      'day': DateTime.now().day,
+    });
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('Expense saved succesfully'),
+      duration: const Duration(seconds: 2),
+    ));
+    Navigator.of(context).pop();
   }
 }
